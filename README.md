@@ -1,128 +1,115 @@
 # AutoYield-AI
 
-AutoYield-AI is an autonomous wafer quality pipeline that combines computer vision inference, explainability, drift monitoring, and GenAI-assisted root-cause analysis. It is structured as a clean full-stack monorepo containing a FastAPI backend, a React/Vite operations dashboard, and a Streamlit demo UI.
+AutoYield-AI is an end-to-end autonomous wafer quality inspection system. It combines computer vision defect detection, model explainability, drift monitoring, synthetic data generation, and optional GenAI-assisted root-cause analysis in a unified monorepo.
 
-**What it does**
-- Runs defect classification on wafer images using an EfficientNet-B0 model.
-- Generates Grad-CAM heatmaps for visual explainability.
-- Produces root-cause summaries using deterministic rules or Gemini (optional).
-- Tracks drift based on confidence and triggers synthetic data generation.
-- Serves a React dashboard and a Streamlit demo app.
+## What AutoYield-AI Does
 
-**Tech Stack**
+- Classifies wafer defects using an EfficientNet-B0 image model.
+- Creates Grad-CAM heatmaps for model explainability.
+- Generates root-cause summaries using deterministic rules or Google Gemini when configured.
+- Monitors drift through confidence-based metrics and triggers synthetic data generation.
+- Provides both a React/Vite operations dashboard and a Streamlit demo interface.
+
+## Tech Stack
+
 - Backend: FastAPI, PyTorch, torchvision, OpenCV, NumPy, scikit-learn
 - Frontend: React, Vite, React Router
 - Optional GenAI: Google Gemini via `google-generativeai`
 
----
-
-## Workspace Structure
+## Repository Layout
 
 ```
-AutoYeildAI/                    (Root Workspace)
-├── client/                      (Frontend Application - React + Vite)
-├── server/                      (Backend Application - FastAPI + ML Pipelines)
-└── docs/                        (Overall system architecture and documentation)
+AutoYeildAI/
+├── client/      Frontend dashboard (React + Vite)
+├── server/      Backend application, ML pipelines, demo UI, scripts
+└── docs/        Architecture and project documentation
 ```
 
----
+## Getting Started
 
-## Quick Start
-
-### 1) Backend API (FastAPI)
+### 1) Run the Backend API
 
 ```bash
-# Navigate to the server folder
 cd server
-
-# Install dependencies (use virtual environment if desired)
+python -m venv .venv
+.\.venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 pip install torch torchvision opencv-python pillow
+```
 
-# Create server/.env from server/.env.example and set MONGO_URI
+Create `server/.env` from `server/.env.example`, then start the API:
+
+```bash
 uvicorn api.app:app --reload --port 8000
 ```
 
-The API exposes:
-- `POST /api/analyze` for image analysis
-- `GET /api/history` for recent inspections
-- `GET /api/metrics` for dashboard summary
+Recommended endpoints:
+- `POST /api/analyze` — analyze wafer images
+- `GET /api/history` — fetch recent inspections
+- `GET /api/metrics` — retrieve dashboard metrics
 
-### 2) Web Dashboard (React + Vite)
+### 2) Start the Web Dashboard
 
 ```bash
-# Navigate to the client folder
 cd client
-
-# Install dependencies
 npm install
-
-# Create client/.env from client/.env.example if needed
 npm run dev
 ```
 
-The UI expects the API at `http://localhost:8000`.
+The dashboard expects the backend API to be available at `http://localhost:8000`.
 
-### 3) Streamlit Demo
+### 3) Launch the Streamlit Demo
 
 ```bash
-# Navigate to the server folder
 cd server
-
-# Run the Streamlit dashboard
 streamlit run ui/dashboard.py
 ```
 
----
+## Configuration
 
-## Environment Variables
+### Backend environment variables (`server/.env`)
 
-### Backend (`server/.env`):
-
-```bash
-MONGO_URI=mongodb+srv://YOUR_DB_USER:YOUR_DB_PASSWORD@cluster0.0dwbwfe.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
+```env
+MONGO_URI=mongodb+srv://USER:PASSWORD@cluster0.0dwbwfe.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0
 MONGO_DB_NAME=autoyield
 MONGO_SERVER_SELECTION_TIMEOUT_MS=5000
 CORS_ORIGINS=http://localhost:5173,http://127.0.0.1:5173
 ```
-If your MongoDB password contains special characters (`@`, `:`, `/`, `?`, `#`, `%`), URL-encode it in `MONGO_URI`.
 
-### Frontend (`client/.env`):
+> If your MongoDB password contains special characters such as `@`, `:`, `/`, `?`, `#`, or `%`, URL-encode it.
 
-```bash
+### Frontend environment variables (`client/.env`)
+
+```env
 VITE_API_BASE_URL=http://localhost:8000
 ```
 
-### Optional Gemini Root-Cause Analysis:
+### Optional Gemini configuration
 
-```bash
+```env
 GEMINI_API_KEY=your_key_here
 GEMINI_MODEL=gemini-1.5-flash
 ```
 
-Without these, the system uses fallback rules.
+If Gemini is not configured, the app falls back to deterministic root-cause analysis rules.
 
----
+## Project Structure
 
-## Project Structure Detail
+- `client/` — React dashboard and UI code
+- `server/api/` — FastAPI service and REST endpoints
+- `server/src/` — core ML and pipeline implementation
+- `server/config/` — YAML configuration and prompt templates
+- `server/models/` — trained model weights and metadata
+- `server/data/` — raw and processed wafer datasets
+- `server/ui/` — Streamlit demo app
+- `server/scripts/` — inference, retraining, drift, and RAG utilities
+- `server/tests/` — unit and integration tests
+- `server/outputs/` — generated heatmaps, predictions, explanations, and synthetic data
+- `server/reports/` — generated reports and inspection summaries
+- `server/runlogs/` — execution logs and diagnostic outputs
 
-```
-client/                 React/Vite frontend dashboard
-server/                 Backend workspace
-├── api/                FastAPI service
-├── src/                Core ML pipeline (inference, explainability, drift, reasoning)
-├── scripts/            RAG ingestion/indexing scripts
-├── config/             YAML configs and prompt templates
-├── models/             Model checkpoints
-├── data/               Raw and processed wafer datasets
-├── ui/                 Streamlit demo
-├── tests/              Unit and integration tests
-├── outputs/            Local inference/run-time outputs (uploads, heatmaps, synthetics)
-├── reports/            Generated PDF/HTML reports
-└── runlogs/            Execution logs
-docs/                   Overall system architecture and documentation
-```
+## Notes
 
-## Notes on Data and Models
-
-This repository includes large datasets and model files under `server/data/`, `server/outputs/`, and `server/models/`. If you plan to push to GitHub, consider using Git LFS or moving large assets to external storage.
+- The repository contains large model and dataset assets under `server/data/`, `server/models/`, and `server/outputs/`.
+- For GitHub publishing, use Git LFS or external storage for large files.
+- The system is designed to support both local development and deployment-ready API/dashboard workflows.
